@@ -7,6 +7,7 @@ import threading
 import gradio as gr
 from apscheduler.schedulers.background import BackgroundScheduler
 
+
 from database import repository
 from graph import app_graph
 
