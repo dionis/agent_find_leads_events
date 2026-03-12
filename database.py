@@ -119,6 +119,22 @@ class LeadRepository:
             return session.query(Lead).order_by(Lead.created_at.desc()).limit(limit).all()
         finally:
             session.close()
+
+    def clear_all_leads(self):
+        """
+        Deletes all leads from the database.
+        """
+        session = self.SessionLocal()
+        try:
+            session.query(Lead).delete()
+            session.commit()
+            return True
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Error clearing leads: {str(e)}")
+            return False
+        finally:
+            session.close()
             
     def get_stats(self):
         """

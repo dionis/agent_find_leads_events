@@ -152,6 +152,22 @@ with gr.Blocks(title="Event Prospecting Multi-Agent Monitor") as demo:
         status_panel = gr.Markdown("Loading status...")
         stats_panel = gr.Markdown("Loading stats...")
         
+    with gr.Accordion("🛠️ Configuration & Management", open=False):
+        gr.Markdown("Manage the search niches and database records.")
+        with gr.Row():
+            with gr.Column():
+                niche_input = gr.Textbox(
+                    label="Target Niches (comma separated)",
+                    value=", ".join(niches),
+                    lines=3
+                )
+                update_niches_btn = gr.Button("Update Niches")
+                niche_status = gr.Markdown("")
+            with gr.Column():
+                gr.Markdown("### Danger Zone")
+                clear_db_btn = gr.Button("🗑️ Delete All Data from DB", variant="stop")
+                clear_db_status = gr.Markdown("")
+
     with gr.Row():
         with gr.Column():
             gr.Markdown("### ⚙️ Manual Actions")
@@ -180,6 +196,33 @@ with gr.Blocks(title="Event Prospecting Multi-Agent Monitor") as demo:
     refresh_btn.click(
         fn=refresh_dashboard,
         outputs=[status_panel, stats_panel, leads_table]
+    )
+    
+    def on_update_niches(text):
+        global niches
+        items = [x.strip() for x in text.replace('\n', ',').split(',')]
+        niches_updated = [x for x in items if x]
+        if niches_updated:
+            niches = niches_updated
+            return f"✅ Niches updated successfully! Loaded {len(niches)} niches."
+        else:
+            return "❌ Error: Niches list cannot be empty."
+
+    update_niches_btn.click(fn=on_update_niches, inputs=[niche_input], outputs=[niche_status])
+
+    def on_clear_db():
+        success = repository.clear_all_leads()
+        if success:
+            s1, s2, table = refresh_dashboard()
+            return "✅ Database cleared.", s1, s2, table
+        
+        s1, s2, table = refresh_dashboard()
+        return "❌ Error clearing database.", s1, s2, table
+
+    clear_db_btn.click(
+        fn=on_clear_db, 
+        inputs=[], 
+        outputs=[clear_db_status, status_panel, stats_panel, leads_table]
     )
     
     trigger_btn.click(
